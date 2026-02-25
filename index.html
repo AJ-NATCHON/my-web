@@ -30,7 +30,6 @@
 
         .card { background: var(--bj-white); padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); border: 1px solid #eee; margin-bottom: 25px; }
 
-        /* Stats & Status */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 25px 0; }
         .stat-box { background: var(--bj-maroon); color: white; padding: 25px; border-radius: 12px; text-align: center; position: relative; }
         .stat-box span { font-size: 2.5rem; font-weight: bold; display: block; margin: 5px 0; }
@@ -45,12 +44,10 @@
         .btn-excel { background: #217346; color: white; width: 100%; }
         .btn-danger { background: #dc3545; color: white; font-size: 0.8rem; padding: 5px 10px; }
 
-        /* Admin Dashboard */
         .admin-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 25px; }
         .dash-item { background: #fff; border-bottom: 4px solid var(--bj-maroon); padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .dash-item b { font-size: 1.5rem; color: var(--bj-maroon); }
 
-        /* Filters */
         .filter-section { background: #f9f9f9; padding: 20px; border-radius: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; border: 1px solid #eee; }
         
         .form-group { margin-bottom: 15px; text-align: left; }
@@ -62,9 +59,15 @@
         td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.95rem; }
         
         .time-setting { background: #fff5f5; padding: 15px; border-radius: 10px; border: 1px solid #ffdada; margin-bottom: 20px; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
     </style>
 </head>
 <body>
+
+<div id="loader" class="loading-overlay">
+    <div style="border: 5px solid #f3f3f3; border-top: 5px solid var(--bj-maroon); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
+    <p style="margin-top: 15px; font-weight: bold;">กำลังโหลดข้อมูลระบบ...</p>
+</div>
 
 <header>
     <img src="https://scontent.fbkk6-1.fna.fbcdn.net/v/t39.30808-6/306923631_395890806076476_6672577154631151845_n.png?_nc_cat=108&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=eTX3l7pSXQUQ7kNvwFq9_Iu&_nc_oc=AdkzXDcIIBL-KI9WP-jpynxdc0TsYdkmzZFeDNbWp1PMto5bZzDqdZd2RNL4SbF09Ec&_nc_zt=23&_nc_ht=scontent.fbkk6-1.fna&_nc_gid=rc8jEYYzJ8R7v7BmEI94Yw&oh=00_AfuT3MyqN70tbB5K3sy_aocLm0f2sFbWCLQI7O7dmdPh8g&oe=69A49462" class="logo" alt="BR Logo">
@@ -90,7 +93,6 @@
             <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <button id="btn-junior" class="btn btn-maroon" onclick="openForm('junior')">ม.ต้น สมัครชุมนุม</button>
                 <button id="btn-senior" class="btn btn-maroon" onclick="openForm('senior')">ม.ปลาย สมัครชุมนุม</button>
-                <button class="btn btn-outline" onclick="studentCancelPortal()">ยกเลิก/เปลี่ยนชุมนุม</button>
             </div>
             <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
             <button class="btn btn-outline" onclick="checkAdmin()">สำหรับครูผู้ดูแล (Admin)</button>
@@ -110,12 +112,12 @@
                 <div class="form-group"><label>ระดับชั้น / ห้องเรียน</label><select id="room" required></select></div>
                 <div class="form-group"><label>อีเมลโรงเรียน (@br.ac.th เท่านั้น)</label><input type="email" id="email" placeholder="sXXXXX@br.ac.th" required></div>
                 <div class="form-group">
-                    <label>เลือกชุมนุม (จดจำครูผู้สอนด้านล่าง)</label>
+                    <label>เลือกชุมนุม</label>
                     <select id="clubSelect" required onchange="updateTeacherHint()"></select>
                     <div id="teacher-hint" style="margin-top: 10px; color: var(--bj-maroon); font-weight: bold;"></div>
                 </div>
                 <div style="margin-top: 25px;">
-                    <button type="submit" class="btn btn-maroon">ยืนยันข้อมูลสมัคร</button>
+                    <button type="submit" id="submitBtn" class="btn btn-maroon">ยืนยันข้อมูลสมัคร</button>
                     <button type="button" class="btn btn-outline" onclick="goPage('page-home')">ยกเลิก</button>
                 </div>
             </form>
@@ -125,7 +127,6 @@
     <section id="page-admin" class="page">
         <div class="card">
             <h2 style="color: var(--bj-maroon);">แผงควบคุมผู้ดูแลระบบ</h2>
-            
             <div class="time-setting">
                 <h4 style="margin-top:0">🕒 ตั้งเวลา เปิด-ปิด ระบบ</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -142,23 +143,18 @@
                 </div>
                 <button class="btn btn-maroon" style="margin-top:15px; width:100%" onclick="saveConfig()">บันทึกการตั้งค่าเวลา</button>
             </div>
-
             <h4>📊 สรุปยอดแยกตามระดับชั้น</h4>
             <div class="admin-dashboard" id="admin-dash"></div>
-
             <div class="filter-section">
                 <div><label>ช่วงชั้น</label><select id="f-level" onchange="refreshAdminTable()"><option value="all">ทั้งหมด</option><option value="junior">ม.ต้น</option><option value="senior">ม.ปลาย</option></select></div>
                 <div><label>ชุมนุม</label><select id="f-club" onchange="refreshAdminTable()"><option value="all">ทุกชุมนุม</option></select></div>
                 <div><label>ห้องเรียน</label><select id="f-room" onchange="refreshAdminTable()"><option value="all">ทุกห้อง</option></select></div>
                 <div><label>เครื่องมือ</label><button class="btn btn-excel" onclick="exportSmartExcel()">Excel (ตามที่กรอง)</button></div>
             </div>
-
             <div style="overflow-x: auto;">
                 <table id="admin-table">
                     <thead>
-                        <tr>
-                            <th>เลขประจำตัว</th><th>ชื่อ-นามสกุล</th><th>ห้อง</th><th>เลขที่</th><th>ชุมนุม</th><th>จัดการ</th>
-                        </tr>
+                        <tr><th>เลขประจำตัว</th><th>ชื่อ-นามสกุล</th><th>ห้อง</th><th>เลขที่</th><th>ชุมนุม</th></tr>
                     </thead>
                     <tbody id="admin-tbody"></tbody>
                 </table>
@@ -169,7 +165,9 @@
 </div>
 
 <script>
-    // --- Data Configuration ---
+    // --- Configuration ---
+    const SCRIPT_URL = "https://script.google.com/a/macros/br.ac.th/s/AKfycbyFdUe1DcGC44HUP6iaRwtsHZTPMjTsNaay2G_vjysguSM5ySizNaQ4tRPcMy2j-1RP/exec"; 
+    
     const clubs = [
         { id: 1, name: "ชุมนุมวิทยาศาสตร์", teacher: "ครูธนภูมิ ท้าวมะลิ", limit: 30 },
         { id: 2, name: "ชุมนุมภาษาไทย", teacher: "ครูลินดา เนียมเพราะ", limit: 30 },
@@ -177,13 +175,28 @@
         { id: 4, name: "ชุมนุมคอมพิวเตอร์", teacher: "ครูณัชชนม์ สุวรรณธาดา", limit: 30 }
     ];
 
-    let enrollments = JSON.parse(localStorage.getItem('bj_data_final')) || [];
+    let enrollments = [];
     let config = JSON.parse(localStorage.getItem('bj_config')) || {
         junior: { start: "", end: "" },
         senior: { start: "", end: "" }
     };
 
-    // --- Navigation & Core ---
+    // --- Core Functions ---
+    async function loadDataFromSheet() {
+        document.getElementById('loader').style.display = 'flex';
+        try {
+            const response = await fetch(SCRIPT_URL);
+            enrollments = await response.json();
+            checkSystemStatus();
+        } catch (e) {
+            console.error("Fetch Error:", e);
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
+    window.onload = loadDataFromSheet;
+
     function goPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
@@ -191,8 +204,8 @@
     }
 
     function checkSystemStatus() {
-        document.getElementById('home-junior-count').innerText = enrollments.filter(e => e.level === 'junior').length;
-        document.getElementById('home-senior-count').innerText = enrollments.filter(e => e.level === 'senior').length;
+        document.getElementById('home-junior-count').innerText = enrollments.filter(e => e.level === 'junior' || e.room.includes('ม.1') || e.room.includes('ม.2') || e.room.includes('ม.3')).length;
+        document.getElementById('home-senior-count').innerText = enrollments.filter(e => e.level === 'senior' || e.room.includes('ม.4') || e.room.includes('ม.5') || e.room.includes('ม.6')).length;
         
         const now = new Date();
         ['junior', 'senior'].forEach(type => {
@@ -209,18 +222,17 @@
             } else if(now > end) {
                 status.innerText = "ปิดรับสมัครแล้ว"; btn.disabled = true;
             } else {
-                status.innerText = "เปิดรับสมัครอยู่ (ปิด " + end.toLocaleTimeString('th-TH') + ")";
+                status.innerText = "เปิดรับสมัครอยู่";
                 btn.disabled = false;
             }
         });
     }
 
-    // --- Enrollment Logic ---
+    // --- Enrollment ---
     function openForm(level) {
         document.getElementById('studentLevel').value = level;
         document.getElementById('form-title').innerText = "สมัครชุมนุม ระดับ" + (level === 'junior' ? "ม.ต้น" : "ม.ปลาย");
         
-        // Gen ห้องเรียน
         const roomSelect = document.getElementById('room');
         roomSelect.innerHTML = '<option value="">-- เลือกห้อง --</option>';
         const startG = level === 'junior' ? 1 : 4;
@@ -228,11 +240,10 @@
             for(let r=1; r<=8; r++) roomSelect.innerHTML += `<option value="ม.${g}/${r}">ม.${g}/${r}</option>`;
         }
 
-        // Gen รายชื่อชุมนุม
         const clubSelect = document.getElementById('clubSelect');
         clubSelect.innerHTML = '<option value="">-- เลือกชุมนุม --</option>';
         clubs.forEach(c => {
-            const count = enrollments.filter(e => e.clubId == c.id).length;
+            const count = enrollments.filter(e => e.clubName === c.name).length;
             clubSelect.innerHTML += `<option value="${c.id}" ${count >= c.limit ? 'disabled' : ''}>${c.name} (${count}/${c.limit})</option>`;
         });
         
@@ -245,63 +256,56 @@
         hint.innerText = cid ? "ครูผู้สอน: " + clubs.find(c => c.id == cid).teacher : "";
     }
 
-    document.getElementById('enrollForm').onsubmit = function(e) {
+    document.getElementById('enrollForm').onsubmit = async function(e) {
         e.preventDefault();
-        const sid = document.getElementById('sid').value;
+        const btn = document.getElementById('submitBtn');
         const email = document.getElementById('email').value;
+        const sid = document.getElementById('sid').value;
 
         if(!email.endsWith('@br.ac.th')) return alert("ต้องใช้อีเมล @br.ac.th เท่านั้น");
-        if(enrollments.find(e => e.sid === sid)) return alert("เลขประจำตัวนี้เคยลงทะเบียนแล้ว");
-        if(enrollments.find(e => e.email === email)) return alert("อีเมลนี้เคยลงทะเบียนแล้ว");
+        if(enrollments.find(e => e.sid == sid)) return alert("เลขประจำตัวนี้สมัครไปแล้ว");
+
+        btn.disabled = true;
+        btn.innerText = "กำลังบันทึกข้อมูล...";
 
         const record = {
-            sid, email,
+            sid: sid,
             fullname: document.getElementById('fullname').value,
             no: document.getElementById('no').value,
             room: document.getElementById('room').value,
-            grade: document.getElementById('room').value.split('/')[0],
-            clubId: document.getElementById('clubSelect').value,
             clubName: clubs.find(c => c.id == document.getElementById('clubSelect').value).name,
-            level: document.getElementById('studentLevel').value,
-            timestamp: new Date().toLocaleString()
+            email: email,
+            timestamp: new Date().toLocaleString('th-TH')
         };
 
-        enrollments.push(record);
-        saveAndSync();
-        alert("สมัครสำเร็จเรียบร้อย!");
-        goPage('page-home');
-        this.reset();
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(record)
+            });
+            const result = await response.json();
+            if(result.result === "success") {
+                alert("ลงทะเบียนสำเร็จ!");
+                location.reload();
+            } else {
+                alert("ผิดพลาด: " + result.message);
+            }
+        } catch (err) {
+            alert("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาลองใหม่");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "ยืนยันข้อมูลสมัคร";
+        }
     };
 
-    // --- Student Cancel Portal ---
-    function studentCancelPortal() {
-        const sid = prompt("กรอกเลขประจำตัว 5 หลักเพื่อยกเลิก:");
-        if(!sid) return;
-        const record = enrollments.find(e => e.sid === sid);
-        if(!record) return alert("ไม่พบข้อมูลเลขประจำตัวนี้");
-
-        const confirmEmail = prompt(`คุณ ${record.fullname}\nกรุณายืนยันอีเมล (@br.ac.th) เพื่อลบข้อมูล:`);
-        if(confirmEmail === record.email) {
-            if(confirm("ยืนยันการลบข้อมูลเพื่อสมัครใหม่?")) {
-                enrollments = enrollments.filter(e => e.sid !== sid);
-                saveAndSync();
-                alert("ลบข้อมูลเดิมแล้ว คุณสามารถสมัครใหม่ได้ทันที");
-            }
-        } else if(confirmEmail !== null) {
-            alert("อีเมลไม่ถูกต้อง ข้อมูลจะไม่ถูกลบ");
-        }
-    }
-
-    // --- Admin Functions ---
+    // --- Admin ---
     function checkAdmin() {
         if(prompt("รหัสผ่าน Admin:") === "123456") {
-            // Load Settings
             document.getElementById('time-jr-start').value = config.junior.start;
             document.getElementById('time-jr-end').value = config.junior.end;
             document.getElementById('time-sr-start').value = config.senior.start;
             document.getElementById('time-sr-end').value = config.senior.end;
             
-            // Load Filter
             const fClub = document.getElementById('f-club');
             fClub.innerHTML = '<option value="all">ทุกชุมนุม</option>';
             clubs.forEach(c => fClub.innerHTML += `<option value="${c.name}">${c.name}</option>`);
@@ -328,73 +332,42 @@
         const cl = document.getElementById('f-club').value;
         const rm = document.getElementById('f-room').value;
         
-        // Dashboard
         const dash = document.getElementById('admin-dash');
         dash.innerHTML = '';
         ['ม.1','ม.2','ม.3','ม.4','ม.5','ม.6'].forEach(g => {
-            const c = enrollments.filter(e => e.grade === g).length;
-            dash.innerHTML += `<div class="dash-item"><span>ระดับ</span><br><b>${g}</b><br><span>${c} คน</span></div>`;
+            const count = enrollments.filter(e => e.room.includes(g)).length;
+            dash.innerHTML += `<div class="dash-item"><span>ระดับ</span><br><b>${g}</b><br><span>${count} คน</span></div>`;
         });
 
-        // Filter Rooms based on current level
-        const fRoom = document.getElementById('f-room');
-        const currentVal = fRoom.value;
-        fRoom.innerHTML = '<option value="all">ทุกห้อง</option>';
-        const rooms = [...new Set(enrollments.filter(e => lv === 'all' || e.level === lv).map(e => e.room))].sort();
-        rooms.forEach(r => fRoom.innerHTML += `<option value="${r}" ${r === currentVal ? 'selected':''}>${r}</option>`);
-
-        // Render Table
         const tbody = document.getElementById('admin-tbody');
         tbody.innerHTML = '';
         const filtered = enrollments.filter(e => {
-            return (lv === 'all' || e.level === lv) && (cl === 'all' || e.clubName === cl) && (rm === 'all' || e.room === rm);
+            const isJr = e.room.includes('ม.1') || e.room.includes('ม.2') || e.room.includes('ม.3');
+            const matchLv = (lv === 'all') || (lv === 'junior' && isJr) || (lv === 'senior' && !isJr);
+            return matchLv && (cl === 'all' || e.clubName === cl) && (rm === 'all' || e.room === rm);
         });
 
         filtered.forEach(e => {
-            tbody.innerHTML += `<tr>
-                <td>${e.sid}</td><td>${e.fullname}</td><td>${e.room}</td><td>${e.no}</td><td>${e.clubName}</td>
-                <td><button class="btn btn-danger" onclick="adminDelete('${e.sid}')">ลบ</button></td>
-            </tr>`;
+            tbody.innerHTML += `<tr><td>${e.sid}</td><td>${e.fullname}</td><td>${e.room}</td><td>${e.no}</td><td>${e.clubName}</td></tr>`;
         });
-    }
-
-    function adminDelete(sid) {
-        if(confirm("ยืนยันลบรายชื่อนักเรียนคนนี้?")) {
-            enrollments = enrollments.filter(e => e.sid !== sid);
-            saveAndSync();
-            refreshAdminTable();
-        }
     }
 
     function exportSmartExcel() {
-        const lv = document.getElementById('f-level').value;
-        const cl = document.getElementById('f-club').value;
-        const rm = document.getElementById('f-room').value;
-
-        const filtered = enrollments.filter(e => {
-            return (lv === 'all' || e.level === lv) && (cl === 'all' || e.clubName === cl) && (rm === 'all' || e.room === rm);
+        let csv = "\uFEFFเลขประจำตัว,ชื่อ-นามสกุล,ห้อง,เลขที่,ชุมนุม,อีเมล\n";
+        enrollments.forEach(e => {
+            csv += `${e.sid},${e.fullname},${e.room},${e.no},${e.clubName},${e.email}\n`;
         });
-
-        if(filtered.length === 0) return alert("ไม่มีข้อมูลให้ส่งออก");
-
-        let csv = "\uFEFFเลขประจำตัว,ชื่อ-นามสกุล,ห้อง,เลขที่,ชุมนุม,วันเวลาสมัคร\n";
-        filtered.forEach(e => {
-            csv += `${e.sid},${e.fullname},${e.room},${e.no},${e.clubName},${e.timestamp}\n`;
-        });
-
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `ชุมนุม_${lv}_${cl.replace(' ','')}.csv`;
+        link.download = `ข้อมูลชุมนุม_ทั้งหมด.csv`;
         link.click();
     }
-
-    function saveAndSync() {
-        localStorage.setItem('bj_data_final', JSON.stringify(enrollments));
-    }
-
-    // Init
-    checkSystemStatus();
+    
+    // Spin Animation
+    const style = document.createElement('style');
+    style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
 </script>
 
 </body>
